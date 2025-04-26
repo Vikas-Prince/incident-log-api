@@ -1,0 +1,170 @@
+pipeline {
+    agent any
+
+    parameters {
+        string(name: 'IMAGE_VERSION', defaultValue: 'v1.1.1', description: 'Docker Image Version')
+    }
+    
+    environment {
+        DOCKER_IMAGE = "vikasprince/incident-log-api:${params.IMAGE_VERSION}"
+        NEXUS_REPO = "http://3.110.90.94:8081/repository/Incident-log-api/"
+        GIT_REPO = "https://github.com/Vikas-Prince/incident-log-api"
+        
+        SONAR_HOME = tool 'sonar'
+    }
+
+    stages {
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Parallel Code Quality & Security Checks') {
+            parallel {
+                stage('ESLint Code Quality Analysis') {
+                    steps {
+                        sh 'npm run lint | tee eslint-report.log'
+                    }
+                    post {
+                        always {
+                            archiveArtifacts artifacts: 'eslint-report.log'
+                        }
+                    }
+                }
+                
+                stage('Mocha Test Cases') {
+                    steps {
+                        sh 'npx jest'
+                    }
+                }
+                
+                stage('Trivy Filesystem Scan') {
+                    steps {
+                        sh 'trivy fs --format json -o trivy-filesystem.json --ignore-unfixed --severity LOW,MEDIUM,HIGH,CRITICAL .'
+                    }
+                    post {
+                        always {
+                            archiveArtifacts artifacts: 'trivy-filesystem.json'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube Code Quality Scan') {
+            steps {
+                script {
+                    withSonarQubeEnv('SonarQube') {
+                        sh """
+
+                         ${SONAR_HOME}/bin/sonar-scanner 
+                        -Dsonar.projectName=Incident-log-api \
+                        -Dsonar.projectKey="Incident-log-api" \
+                        -Dsonar.sources=. \
+
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube Quality Gate Check') {
+            steps {
+                script {
+                    timeout(time: 5, unit: 'MINUTES') {
+                        waitForQualityGate abortPipeline: true
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t ${DOCKER_IMAGE} ."
+            }
+        }
+
+        stage('Trivy Image Security Scan') {
+            steps {
+                sh "trivy image --format json -o trivy-image.json ${DOCKER_IMAGE}"
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'trivy-image.json'
+                }
+            }
+        }
+
+        stage('Parallel Docker Push & Artifact Packaging') {
+            parallel {
+                stage('Push Docker Image to Docker Hub') {
+                    steps {
+                        withDockerRegistry([credentialsId: 'docker-hub', url: 'https://registry.hub.docker.com/v2/vikasprince']) {
+                            sh "docker push ${DOCKER_IMAGE}"
+                        }
+                    }
+                }
+
+                stage("Update the Docker Tag in K8s Manifest files") {
+                    steps {
+                        sh """
+                        sed -i "s|image: vikasprince/newsapp:.*|image: ${DOCKER_IMAGE}:${DOCKER_TAG}|" manifest.yml
+                        """
+                        echo "Successfully updated docker tag in the manifest files"
+                    }
+                }
+                
+                stage('Package Artifact using npm pack') {
+                    steps {
+                        sh "npm pack --filename ${DOCKER_IMAGE}.tgz"
+                    }
+                }
+            }
+        }
+
+        stage('Push Tarball to Nexus Repository') {
+            steps {
+                sh"npm publish"
+            }
+        }
+
+        stage('Deploy k8s manifest application to the Kubernetes cluster') {
+            steps {
+                withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'eks-cluster-prod', contextName: '', credentialsId: 'k8s-token', namespace: 'backend', serverUrl: 'https://30B70E8AA9001EFD887CDDD39708E034.gr7.ap-south-1.eks.amazonaws.com']]) {
+                    sh "kubectl apply -f ./k8s/deployment.yml"
+                }
+            }
+        }
+    }
+
+    post {
+    always {
+        script {
+
+            emailext(
+                to: "vikasprince30809@gmail.com",
+                subject: "Jenkins Build Notification: ${env.JOB_NAME}",
+                body: """
+                Hi Team,
+
+                The build for job '${env.JOB_NAME}' has completed!
+
+                Build Details:
+                - Build Number: ${env.BUILD_NUMBER}
+                - Build Status: ${currentBuild.currentResult}
+                - Build Duration: ${currentBuild.durationString}
+                - Build URL: ${env.BUILD_URL}
+
+                Reports are attached.
+
+                Regards,
+                Jenkins
+                """,
+                from: "jenkins@gmail.com",
+            )
+        }
+    }
+}
+
+}
