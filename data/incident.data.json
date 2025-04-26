@@ -1,0 +1,73 @@
+[
+    {
+      "title": "CI/CD Pipeline Build Failure",
+      "description": "The latest commit caused the CI/CD pipeline to fail during the build phase due to a dependency version mismatch in the Node.js application.",
+      "severity": "high",
+      "status": "investigating",
+      "reportedBy": "DevOps Engineer - Ravi Kumar"
+    },
+    {
+      "title": "Deployment Failure on Kubernetes",
+      "description": "The new version of the backend application failed to deploy to the Kubernetes cluster due to insufficient resource allocation and lack of required environment variables.",
+      "severity": "critical",
+      "status": "open",
+      "reportedBy": "Infrastructure Engineer - Sita Rani"
+    },
+    {
+      "title": "Container Crash Due to Memory Overflow",
+      "description": "A Docker container running the application crashed due to a memory overflow caused by an unoptimized query in the backend service.",
+      "severity": "medium",
+      "status": "resolved",
+      "reportedBy": "System Administrator - Venkatesh Babu"
+    },
+    {
+      "title": "Kubernetes Pod Auto-Scaling Failure",
+      "description": "The horizontal pod autoscaler (HPA) failed to scale the pods properly due to an issue with the defined resource requests and limits in the Kubernetes deployment manifest.",
+      "severity": "high",
+      "status": "resolved",
+      "reportedBy": "DevOps Engineer - Lakshmi Devi"
+    },
+    {
+      "title": "Monitoring System Downtime",
+      "description": "The monitoring system (Prometheus and Grafana) went down due to a misconfigured alerting rule, which caused several critical service downtimes to go unnoticed.",
+      "severity": "critical",
+      "status": "investigating",
+      "reportedBy": "Site Reliability Engineer - Harish Rao"
+    },
+    {
+      "title": "Infrastructure Automation Failure",
+      "description": "An issue in the Terraform script led to a failure in provisioning new infrastructure on AWS, causing delays in the deployment of new microservices.",
+      "severity": "medium",
+      "status": "open",
+      "reportedBy": "Cloud Engineer - Priya Lakshmi"
+    },
+    {
+      "title": "Database Performance Issues",
+      "description": "The MongoDB replica set encountered performance bottlenecks due to slow queries caused by missing indexes, leading to application timeouts.",
+      "severity": "high",
+      "status": "resolved",
+      "reportedBy": "Database Administrator - Surya Narayana"
+    },
+    {
+      "title": "Backup System Failure",
+      "description": "The backup system failed to perform scheduled backups of the cloud database due to a misconfigured IAM role in AWS, causing potential data loss risks.",
+      "severity": "critical",
+      "status": "open",
+      "reportedBy": "Backup Specialist - Anjali Kiran"
+    },
+    {
+      "title": "API Rate Limiting Issues",
+      "description": "Excessive API calls from a partner integration caused the API gateway to hit rate limits, leading to service outages and delayed responses from the API.",
+      "severity": "medium",
+      "status": "investigating",
+      "reportedBy": "API Manager - Karthik Babu"
+    },
+    {
+      "title": "Security Vulnerability in Code",
+      "description": "A security vulnerability was identified in the production code due to improper sanitization of user inputs in the web application, potentially allowing SQL injection.",
+      "severity": "critical",
+      "status": "resolved",
+      "reportedBy": "Security Engineer - Nandini Reddy"
+    }
+  ]
+  
