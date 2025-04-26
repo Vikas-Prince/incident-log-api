@@ -13,11 +13,15 @@ const options = {
       {
         url: "http://localhost:5000/api/v1",
       },
+      {
+        url: "http://localhost:5000",
+      },
     ],
   },
   apis: [
-    path.join(__dirname, "routes/incident.routes.js"),
+    path.join(__dirname, "routes/*.js"),
     path.join(__dirname, "models/incident.model.js"),
+    path.join(__dirname, "./swagger-doc.js"),
   ],
 };
 
